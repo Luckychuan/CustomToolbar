@@ -7,9 +7,11 @@ import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -29,6 +31,9 @@ public class CustomToolbar extends RelativeLayout {
     private ImageButton mBackButton;
     private ImageButton mMenuButton;
     private TextView mTextView;
+
+    private OnBackButtonClickListener mBackButtonClickListener;
+    private OnMenuItemClickListener mMenuItemClickListener;
 
     public CustomToolbar(Context context) {
         super(context);
@@ -56,13 +61,34 @@ public class CustomToolbar extends RelativeLayout {
         mBackButton.setBackgroundResource(R.drawable.ripple_arrow_back);
         addView(mBackButton, backLayoutParams);
 
-        mMenuButton = new ImageButton(context);
-        LayoutParams menuLayoutParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        menuLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-        menuLayoutParams.addRule(RelativeLayout.CENTER_VERTICAL);
-        menuLayoutParams.setMargins(0, 0, dpToPx(16), 0);
-        mMenuButton.setBackgroundResource(R.drawable.ripple_more);
-        addView(mMenuButton, menuLayoutParams);
+        if (mMenuId != 0) {
+            mMenuButton = new ImageButton(context);
+            LayoutParams menuLayoutParams = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            menuLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+            menuLayoutParams.addRule(RelativeLayout.CENTER_VERTICAL);
+            menuLayoutParams.setMargins(0, 0, dpToPx(16), 0);
+            mMenuButton.setBackgroundResource(R.drawable.ripple_more);
+            addView(mMenuButton, menuLayoutParams);
+
+            mMenuButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    PopupMenu popupMenu = new PopupMenu(getContext(), mMenuButton);
+                    Log.d(TAG, "onClick: " + mMenuId);
+                    popupMenu.getMenuInflater().inflate(mMenuId, popupMenu.getMenu());
+                    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                        @Override
+                        public boolean onMenuItemClick(MenuItem menuItem) {
+                            if (mMenuItemClickListener != null) {
+                                mMenuItemClickListener.onMenuItemClick(menuItem.getItemId());
+                            }
+                            return true;
+                        }
+                    });
+                    popupMenu.show();
+                }
+            });
+        }
 
         //设置标题
         mTextView = new TextView(context);
@@ -77,8 +103,40 @@ public class CustomToolbar extends RelativeLayout {
         textViewLayoutParams.setMargins(dpToPx(16), 0, 0, 0);
         addView(mTextView, textViewLayoutParams);
 
+        mBackButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mBackButtonClickListener != null) {
+                    mBackButtonClickListener.onBackButtonClick();
+                }
+            }
+        });
+
 
     }
+
+    public void setBackButtonVisibility(int visibility) {
+        if (mBackButton != null) {
+            mBackButton.setVisibility(visibility);
+        }
+    }
+
+    public void setMenuButtonVisibility(int visibility) {
+        if (mMenuButton != null) {
+            mMenuButton.setVisibility(visibility);
+        }
+    }
+
+    public void setOnBackButtonClickListener(OnBackButtonClickListener listener) {
+        mBackButtonClickListener = listener;
+    }
+
+    public void setOnMenuItemClickListener(OnMenuItemClickListener listener) {
+        if (mMenuId != 0) {
+            mMenuItemClickListener = listener;
+        }
+    }
+
 
     /**
      * 当宽度和高是wrap_content时，自适应大小
@@ -122,7 +180,7 @@ public class CustomToolbar extends RelativeLayout {
             // 动态获取子View实例
             for (int i = 0, size = getChildCount(); i < size; i++) {
                 View view = getChildAt(i);
-                Log.d(TAG, "onLayout: " + mHeightOffset);
+//                Log.d(TAG, "onLayout: " + mHeightOffset);
                 //给子控件设置margin的值，让其居中
                 view.layout(view.getLeft(), view.getTop() + mHeightOffset / 2, view.getRight(), view.getBottom() + mHeightOffset / 2);
             }
@@ -133,7 +191,6 @@ public class CustomToolbar extends RelativeLayout {
         int mode = MeasureSpec.getMode(heightMeasureSpec);
         //当属性是wrap_content时,让高度为56dp
         if (mode == MeasureSpec.AT_MOST) {
-            Log.d(TAG, "getAdaptiveHeight: ");
             mHeightOffset = dpToPx(56) - height;
             height = dpToPx(56);
         }
@@ -144,6 +201,15 @@ public class CustomToolbar extends RelativeLayout {
     private int dpToPx(int dp) {
         float scale = getResources().getDisplayMetrics().density;
         return (int) (dp * scale + 0.5f);
+    }
+
+
+    interface OnBackButtonClickListener {
+        void onBackButtonClick();
+    }
+
+    interface OnMenuItemClickListener {
+        void onMenuItemClick(int itemId);
     }
 
 }

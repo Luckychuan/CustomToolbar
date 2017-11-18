@@ -7,10 +7,12 @@
     tools:context="com.example.luckychuan.customtoolbar.MainActivity">
 
     <com.example.luckychuan.customtoolbar.CustomToolbar
+        android:id="@+id/customToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
-        app:title="测试标题"></com.example.luckychuan.customtoolbar.CustomToolbar>
+        app:title="测试标题"
+        app:menu="@menu/main_menu"></com.example.luckychuan.customtoolbar.CustomToolbar>
 
 
 </RelativeLayout>
